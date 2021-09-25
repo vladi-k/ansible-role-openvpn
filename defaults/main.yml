@@ -1,0 +1,16 @@
+---
+openvpn_packages:
+  - openvpn
+
+# client or server
+openvpn_type: ""
+
+openvpn_cert_dirs: []
+openvpn_certs: []
+openvpn_chroot_dir: ""
+openvpn_chroot_user: nobody
+openvpn_user: nobody
+openvpn_ccd_dir: ""
+openvpn_ccd_configs: []
+openvpn_configs: []
+openvpn_restart: false
