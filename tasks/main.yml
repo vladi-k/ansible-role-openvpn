@@ -1,0 +1,73 @@
+---
+- name: Check if openvpn_type is set
+  ansible.builtin.assert:
+    that:
+      - openvpn_type == "client" or openvpn_type == "server"
+    quiet: true
+    fail_msg: openvpn_type variable must be set to 'client' or 'server'
+
+- name: Install openvpn packages
+  ansible.builtin.package:
+    name: "{{ openvpn_packages }}"
+    state: present
+
+- name: Create certificate directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    mode: '0700'
+  loop: "{{ openvpn_cert_dirs }}"
+
+- name: Copy certificates
+  ansible.builtin.copy:
+    content: "{{ item.content }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    mode: '0400'
+  no_log: true
+  loop: "{{ openvpn_certs }}"
+
+- name: Create chroot directory
+  ansible.builtin.file:
+    path: "{{ openvpn_chroot_dir }}"
+    state: directory
+    owner: "{{ openvpn_chroot_user }}"
+    mode: '0700'
+  when: openvpn_chroot_dir | length > 0
+
+- name: Create ccd directory
+  ansible.builtin.file:
+    path: "{{ openvpn_ccd_dir }}"
+    state: directory
+    owner: "{{ openvpn_user }}"
+    mode: '0700'
+  when: openvpn_ccd_dir | length > 0
+
+- name: Copy ccd files
+  ansible.builtin.copy:
+    content: "{{ item.content }}"
+    dest: "{{ openvpn_ccd_dir }}/{{ item.file }}"
+    owner: "{{ openvpn_user }}"
+    mode: '0400'
+  loop: "{{ openvpn_ccd_configs }}"
+
+- name: Generate openvpn config
+  ansible.builtin.template:
+    src: server.conf
+    dest: "/etc/openvpn/{{ openvpn_type }}/{{ item.name }}.conf"
+    owner: root
+    mode: '0400'
+  loop: "{{ openvpn_configs }}"
+  register: __openvpn_config
+  notify:
+    - restart openvpn
+
+- name: Start and enable openvpn
+  ansible.builtin.systemd:
+    name: "openvpn-{{ openvpn_type }}@{{ item.name }}.service"
+    state: started
+    enabled: true
+  loop: "{{ openvpn_configs }}"
+  loop_control:
+    label: "{{ item.name }}"

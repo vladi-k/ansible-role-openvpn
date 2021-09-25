@@ -1,0 +1,11 @@
+---
+- name: restart openvpn
+  ansible.builtin.systemd:
+    name: "openvpn-{{ openvpn_type }}@{{ item.item.name }}.service"
+    state: restarted
+  when:
+    - item.changed
+    - openvpn_restart | bool
+  loop: "{{ __openvpn_config.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
