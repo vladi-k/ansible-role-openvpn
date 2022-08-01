@@ -14,3 +14,4 @@ openvpn_ccd_dir: ""
 openvpn_ccd_configs: []
 openvpn_configs: []
 openvpn_restart: false
+openvpn_capability_bonding_sets: []
