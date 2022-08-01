@@ -50,6 +50,7 @@ openvpn_configs:
 ```
 
 * `openvpn_restart` - boolean to restart openvpn on config changes
+* `openvpn_capability_bonding_sets` - list of capabilities to set in systemd unit file for `CapabilityBoundingSet`
 
 Dependencies
 ------------

@@ -16,7 +16,7 @@
     path: "{{ item }}"
     state: directory
     owner: root
-    mode: '0700'
+    mode: "0700"
   loop: "{{ openvpn_cert_dirs }}"
 
 - name: Copy certificates
@@ -24,7 +24,7 @@
     content: "{{ item.content }}"
     dest: "{{ item.dest }}"
     owner: root
-    mode: '0400'
+    mode: "0400"
   no_log: true
   loop: "{{ openvpn_certs }}"
 
@@ -33,7 +33,7 @@
     path: "{{ openvpn_chroot_dir }}"
     state: directory
     owner: "{{ openvpn_chroot_user }}"
-    mode: '0700'
+    mode: "0700"
   when: openvpn_chroot_dir | length > 0
 
 - name: Create ccd directory
@@ -41,7 +41,7 @@
     path: "{{ openvpn_ccd_dir }}"
     state: directory
     owner: "{{ openvpn_user }}"
-    mode: '0700'
+    mode: "0700"
   when: openvpn_ccd_dir | length > 0
 
 - name: Copy ccd files
@@ -49,7 +49,7 @@
     content: "{{ item.content }}"
     dest: "{{ openvpn_ccd_dir }}/{{ item.file }}"
     owner: "{{ openvpn_user }}"
-    mode: '0400'
+    mode: "0400"
   loop: "{{ openvpn_ccd_configs }}"
 
 - name: Generate openvpn config
@@ -57,9 +57,23 @@
     src: server.conf
     dest: "/etc/openvpn/{{ openvpn_type }}/{{ item.name }}.conf"
     owner: root
-    mode: '0400'
+    mode: "0400"
   loop: "{{ openvpn_configs }}"
   register: __openvpn_config
+  notify:
+    - restart openvpn
+
+- name: tune CapabilityBoundingSet
+  community.general.ini_file:
+    path: "/usr/lib/systemd/system/openvpn-{{ openvpn_type }}@.service"
+    section: Service
+    option: CapabilityBoundingSet
+    value: "{{ openvpn_capability_bonding_sets | join(' ') }}"
+    no_extra_spaces: true
+    owner: root
+    group: root
+    mode: "0644"
+  when: openvpn_capability_bonding_sets | length > 0
   notify:
     - restart openvpn
 
